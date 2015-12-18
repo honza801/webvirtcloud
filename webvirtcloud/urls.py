@@ -1,5 +1,5 @@
 from django.conf.urls import patterns, include, url
-# from django.contrib import admin
+from django.contrib import admin
 
 urlpatterns = patterns('',
     url(r'^$', 'instances.views.index', name='index'),
@@ -28,5 +28,5 @@ urlpatterns = patterns('',
 
     url(r'^console/$', 'console.views.console', name='console'),
     url(r'^logs/$', 'logs.views.showlogs', name='showlogs'),
-    # (r'^admin/', include(admin.site.urls)),
+    url(r'^admin/', include(admin.site.urls)),
 )
