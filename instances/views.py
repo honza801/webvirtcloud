@@ -565,7 +565,7 @@ def instance(request, compute_id, vname):
                 addlogmsg(request.user.username, instance.name, msg)
                 return HttpResponseRedirect(request.get_full_path() + '#resize')
 
-            if 'umount_iso' in request.POST:
+            if 'umount_iso' in request.POST and (request.user.is_superuser or request.user.is_staff or userinstance.is_change):
                 image = request.POST.get('path', '')
                 dev = request.POST.get('umount_iso', '')
                 conn.umount_iso(dev, image)
@@ -573,7 +573,7 @@ def instance(request, compute_id, vname):
                 addlogmsg(request.user.username, instance.name, msg)
                 return HttpResponseRedirect(request.get_full_path() + '#media')
 
-            if 'mount_iso' in request.POST:
+            if 'mount_iso' in request.POST and (request.user.is_superuser or request.user.is_staff or userinstance.is_change):
                 image = request.POST.get('media', '')
                 dev = request.POST.get('mount_iso', '')
                 conn.mount_iso(dev, image)
@@ -581,21 +581,21 @@ def instance(request, compute_id, vname):
                 addlogmsg(request.user.username, instance.name, msg)
                 return HttpResponseRedirect(request.get_full_path() + '#media')
 
-            if 'snapshot' in request.POST:
+            if 'snapshot' in request.POST and (request.user.is_superuser or request.user.is_staff or userinstance.is_change):
                 name = request.POST.get('name', '')
                 conn.create_snapshot(name)
                 msg = _("New snapshot")
                 addlogmsg(request.user.username, instance.name, msg)
                 return HttpResponseRedirect(request.get_full_path() + '#managesnapshot')
 
-            if 'delete_snapshot' in request.POST:
+            if 'delete_snapshot' in request.POST and (request.user.is_superuser or request.user.is_staff or userinstance.is_change):
                 snap_name = request.POST.get('name', '')
                 conn.snapshot_delete(snap_name)
                 msg = _("Delete snapshot")
                 addlogmsg(request.user.username, instance.name, msg)
                 return HttpResponseRedirect(request.get_full_path() + '#managesnapshot')
 
-            if 'revert_snapshot' in request.POST:
+            if 'revert_snapshot' in request.POST and (request.user.is_superuser or request.user.is_staff or userinstance.is_change):
                 snap_name = request.POST.get('name', '')
                 conn.snapshot_revert(snap_name)
                 msg = _("Successful revert snapshot: ")
@@ -799,7 +799,7 @@ def instance(request, compute_id, vname):
                             migrate_instance(new_compute, new_instance, xml_del=True, offline=True)
                         return HttpResponseRedirect(reverse('instance', args=[new_instance.compute.id, new_instance.name]))
 
-                if 'change_options' in request.POST:
+                if 'change_options' in request.POST and (not instance.is_template or request.user.is_superuser or request.user.is_staff):
                     instance.is_template = request.POST.get('is_template', False)
                     instance.save()
                     
