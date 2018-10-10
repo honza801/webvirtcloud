@@ -25,6 +25,7 @@ from libvirt import libvirtError, VIR_DOMAIN_XML_SECURE
 from logs.views import addlogmsg
 from django.conf import settings
 from django.contrib import messages
+from agent.wagent import RBDSnapshot
 
 
 @login_required
@@ -344,6 +345,27 @@ def instance(request, compute_id, vname):
         msg = _("Migrate to %s" % new_compute.hostname)
         addlogmsg(request.user.username, instance.name, msg)
 
+    def get_disk_snapshots(disks):
+        if not disks:
+            return []
+        rbd_snap = RBDSnapshot(compute.hostname, compute.login)
+        snapshots = {}
+        for disk in disks:
+            if disk['protocol'] == 'rbd':
+                (ecode, snap_list) = rbd_snap.list(disk['path'])
+                if ecode == 0:
+                    snapshots[disk['dev']] = snap_list
+        rbd_snap.close()
+        return snapshots
+
+    def get_disk_path(dev):
+        disk_paths = [d['path'] for d in disks if d['dev'] == dev]
+        if not disk_paths:
+            return False
+        else:
+            return disk_paths[0]
+
+
     try:
         conn = wvmInstance(compute.hostname,
                            compute.login,
@@ -367,6 +389,7 @@ def instance(request, compute_id, vname):
             media_iso = sorted(conn.get_iso_media())
         else:
             media_iso = []
+        rbd_disks = [ disk for disk in disks if disk['protocol'] == 'rbd' ]
         networks = conn.get_net_device()
         vcpu_range = conn.get_max_cpus()
         memory_range = [256, 512, 768, 1024, 2048, 4096, 6144, 8192, 16384]
@@ -382,6 +405,7 @@ def instance(request, compute_id, vname):
         console_keymap = conn.get_console_keymap()
         console_listen_address = conn.get_console_listen_addr()
         snapshots = sorted(conn.get_snapshot(), reverse=True, key=lambda k:k['date'])
+        disk_snapshots = get_disk_snapshots(rbd_disks)
         inst_xml = conn._XMLDesc(VIR_DOMAIN_XML_SECURE)
         has_managed_save_image = conn.get_managed_save_image()
         console_passwd = conn.get_console_passwd()
@@ -603,6 +627,57 @@ def instance(request, compute_id, vname):
                 messages.success(request, msg)
                 msg = _("Revert snapshot")
                 addlogmsg(request.user.username, instance.name, msg)
+
+            if 'snapshot_disk_create' in request.POST and (request.user.is_superuser or request.user.is_staff or not instance.is_template):
+                dev = request.POST.get('disk_dev', '')
+                snap_name = request.POST.get('snap_name', '')
+                disk_path = get_disk_path(dev)
+                if not disk_path:
+                    msg = _("Disk path for %s not found!" % dev)
+                    error_messages.append(msg)
+                else:
+                    rbd_snap = RBDSnapshot(compute.hostname, compute.login)
+                    (ecode, message) = rbd_snap.create(disk_path, snap_name)
+                    if ecode == 0:
+                        msg = _("New disk snapshot '%s'" % snap_name)
+                        addlogmsg(request.user.username, instance.name, msg)
+                        return HttpResponseRedirect(request.get_full_path() + '#disksnapshot')
+                    else:
+                        error_message.append(message)
+            
+            if 'snapshot_disk_rollback' in request.POST and (request.user.is_superuser or request.user.is_staff or not instance.is_template):
+                dev = request.POST.get('disk_dev', '')
+                snap_name = request.POST.get('snap_name', '')
+                disk_path = get_disk_path(dev)
+                if not disk_path:
+                    msg = _("Disk path for %s not found!" % dev)
+                    error_messages.append(msg)
+                else:
+                    rbd_snap = RBDSnapshot(compute.hostname, compute.login)
+                    (ecode, message) = rbd_snap.rollback(disk_path, snap_name)
+                    if ecode == 0:
+                        msg = _("Rollback disk snapshot '%s'" % snap_name)
+                        addlogmsg(request.user.username, instance.name, msg)
+                        return HttpResponseRedirect(request.get_full_path() + '#disksnapshot')
+                    else:
+                        error_message.append(message)
+            
+            if 'snapshot_disk_remove' in request.POST and (request.user.is_superuser or request.user.is_staff or not instance.is_template):
+                dev = request.POST.get('disk_dev', '')
+                snap_name = request.POST.get('snap_name', '')
+                disk_path = get_disk_path(dev)
+                if not disk_path:
+                    msg = _("Disk path for %s not found!" % dev)
+                    error_messages.append(msg)
+                else:
+                    rbd_snap = RBDSnapshot(compute.hostname, compute.login)
+                    (ecode, message) = rbd_snap.remove(disk_path, snap_name)
+                    if ecode == 0:
+                        msg = _("Removed disk snapshot '%s'" % snap_name)
+                        addlogmsg(request.user.username, instance.name, msg)
+                        return HttpResponseRedirect(request.get_full_path() + '#disksnapshot')
+                    else:
+                        error_message.append(message)
 
             if request.user.is_superuser:
                 if 'suspend' in request.POST:

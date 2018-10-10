@@ -236,6 +236,7 @@ class wvmInstance(wvmConnect):
             volume = None
             storage = None
             src_fl = None
+            src_protocol = None
             disk_format = None
             disk_size = None
 
@@ -247,6 +248,10 @@ class wvmInstance(wvmConnect):
                         src_fl = disk.xpath('source/@file|source/@dev|source/@name|source/@volume')[0]
                         try:
                             disk_format = disk.xpath('driver/@type')[0]
+                        except:
+                            pass
+                        try:
+                            src_protocol = disk.xpath('source/@protocol')[0]
                         except:
                             pass
                         try:
@@ -262,7 +267,7 @@ class wvmInstance(wvmConnect):
                     finally:
                         result.append(
                             {'dev': dev, 'image': volume, 'storage': storage, 'path': src_fl,
-                             'format': disk_format, 'size': disk_size})
+                             'format': disk_format, 'size': disk_size, 'protocol': src_protocol})
             return result
 
         return util.get_xml_path(self._XMLDesc(0), func=disks)

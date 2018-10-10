@@ -522,6 +522,13 @@
                                                     {% trans "Manage Snapshots" %}
                                                 </a>
                                             </li>
+                                            {% if disk_snapshots %}
+                                            <li role="presentation">
+                                                <a href="#disksnapshot" aria-controls="disksnapshot" role="tab" data-toggle="tab">
+                                                    {% trans "Disk Snapshots" %}
+                                                </a>
+                                            </li>
+                                            {% endif %}
                                         </ul>
                                         <!-- Tab panes -->
                                         <div class="tab-content">
@@ -595,6 +602,65 @@
                                                     {% endif %}
                                                 {% else %}
                                                     <p>{% trans "To restore snapshots you need Power Off the instance." %}</p>
+                                                {% endifequal %}
+                                            </div>
+                                            <div role="tabpanel" class="tab-pane tab-pane-bordered" id="disksnapshot">
+                                               {% ifequal status 5 %}
+                                                    {% for disk, snaps in disk_snapshots.items %}
+                                                        <p>{% trans "Choose a snapshot for restore/delete" %}</p>
+                                                        <form class="form-horizontal" method="post" role="form">{% csrf_token %}
+                                                            <input type="hidden" name="disk_dev" value="{{ disk }}">
+                                                            <p style="font-weight: bold;">{{ disk }}</p>
+                                                            <div class="form-group">
+                                                                <div class="col-sm-4">
+                                                                    <input type="text" class="form-control input-sm" name="snap_name" placeholder="{% trans "Enter Snapshot Name" %}" maxlength="14">
+                                                                </div>
+                                                                <div class="col-sm-2">
+                                                                    <input type="submit" class="btn btn-sm btn-success pull-right" name="snapshot_disk_create" value="{% trans "Take Snapshot" %}">
+                                                                </div>
+                                                            </div>
+                                                        </form>
+                                                        <div class="clearfix"></div>
+                                                        <div class="table-responsive">
+                                                            <table class="table">
+                                                                <thead>
+                                                                <tr>
+                                                                    <th>{% trans "Name" %}</th>
+                                                                    <th>{% trans "Timestamp" %}</th>
+                                                                    <th colspan="2">{% trans "Action" %}</th>
+                                                                </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                {% for snap in snaps %}
+                                                                    <tr>
+                                                                        <td><strong>{{ snap.name }}</strong></td>
+                                                                        <td>{{ snap.timestamp }}</td>
+                                                                        <td style="width:30px;">
+                                                                            <form action="" method="post" style="height:10px" role="form">{% csrf_token %}
+                                                                                <input type="hidden" name="disk_dev" value="{{ disk }}">
+                                                                                <input type="hidden" name="snap_name" value="{{ snap.name }}">
+                                                                                <button type="submit" class="btn btn-sm btn-default" name="snapshot_disk_rollback" title="Revert to this Snapshot" onclick="return confirm('{% trans "Are you sure?" %}')">
+                                                                                    <span class="glyphicon glyphicon-save"></span>
+                                                                                </button>
+                                                                            </form>
+                                                                        </td>
+                                                                        <td style="width:30px;">
+                                                                            <form action="" method="post" role="form">{% csrf_token %}
+                                                                                <input type="hidden" name="disk_dev" value="{{ disk }}">
+                                                                                <input type="hidden" name="snap_name" value="{{ snap.name }}">
+                                                                                <button type="submit" class="btn btn-sm btn-default" name="snapshot_disk_remove" title="Delete Snapshot" onclick="return confirm('{% trans "Are you sure?" %}')">
+                                                                                    <span class="glyphicon glyphicon-trash"></span>
+                                                                                </button>
+                                                                            </form>
+                                                                        </td>
+                                                                    </tr>
+                                                                {% endfor %}
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    {% endfor %}
+                                                {% else %}
+                                                    <p>{% trans "To manage disk snapshots you need Power Off the instance." %}</p>
                                                 {% endifequal %}
                                             </div>
                                         </div>
