@@ -31,43 +31,53 @@ class WAgent:
     def close(self):
         self.socket.close()
 
-class RBDSnapshot(WAgent):
+class RBDAgent(WAgent):
 
-    def list(self, image):
+    def snap_list(self, image):
         req = {
             'action': 'rbd',
-            'subaction': [ 'snap', 'list'],
+            'subaction': 'snap_list',
             'image': image,
         }
         res = self.make_request_json(req)
         return (res['exitcode'], res['message'])
 
-    def create(self, image, snap_name):
+    def snap_create(self, image, snap_name):
         req = {
             'action': 'rbd',
-            'subaction': [ 'snap', 'create'],
+            'subaction': 'snap_create',
             'image': image,
             'snap_name': snap_name,
         }
         res = self.make_request_json(req)
         return (res['exitcode'], res['message'])
     
-    def rollback(self, image, snap_name):
+    def snap_rollback(self, image, snap_name):
         req = {
             'action': 'rbd',
-            'subaction': [ 'snap', 'rollback'],
+            'subaction': 'snap_rollback',
             'image': image,
             'snap_name': snap_name,
         }
         res = self.make_request_json(req)
         return (res['exitcode'], res['message'])
 
-    def remove(self, image, snap_name):
+    def snap_remove(self, image, snap_name):
         req = {
             'action': 'rbd',
-            'subaction': [ 'snap', 'remove'],
+            'subaction': 'snap_remove',
             'image': image,
             'snap_name': snap_name,
+        }
+        res = self.make_request_json(req)
+        return (res['exitcode'], res['message'])
+
+    def clone(self, source, target):
+        req = {
+            'action': 'rbd',
+            'subaction': 'clone',
+            'source': source,
+            'target': target,
         }
         res = self.make_request_json(req)
         return (res['exitcode'], res['message'])

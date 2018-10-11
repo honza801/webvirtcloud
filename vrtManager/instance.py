@@ -11,7 +11,6 @@ from vrtManager.connection import wvmConnect
 from vrtManager.storage import wvmStorage
 from webvirtcloud.settings import QEMU_CONSOLE_TYPES
 
-
 class wvmInstances(wvmConnect):
     def get_instance_status(self, name):
         inst = self.get_instance(name)
@@ -674,7 +673,7 @@ class wvmInstance(wvmConnect):
         mac_tuples = [mac[i:i+n] for i in range(0, len(mac), n)]
         return ':'.join(mac_tuples)
 
-    def clone_instance(self, clone_data):
+    def clone_instance(self, clone_data, rbd_agent=None):
         clone_dev_path = []
 
         xml = self._XMLDesc(VIR_DOMAIN_XML_SECURE)
@@ -732,22 +731,10 @@ class wvmInstance(wvmConnect):
                     source_name = elm.get('name')
                     clone_name = "%s/%s" % (os.path.dirname(source_name), target_file)
                     elm.set('name', clone_name)
-
+                    rbd_agent.clone(source_name, clone_name)
                     vol = self.get_volume_by_path(source_name)
-                    vol_format = util.get_xml_path(vol.XMLDesc(0),
-                                                   "/volume/target/format/@type")
-
-                    vol_clone_xml = """
-                                    <volume type='network'>
-                                        <name>%s</name>
-                                        <capacity>0</capacity>
-                                        <allocation>0</allocation>
-                                        <target>
-                                            <format type='%s'/>
-                                        </target>
-                                    </volume>""" % (target_file, vol_format)
                     stg = vol.storagePoolLookupByVolume()
-                    stg.createXMLFrom(vol_clone_xml, vol, meta_prealloc)
+                    stg.refresh(0)
 
                 source_dev = elm.get('dev')
                 if source_dev:

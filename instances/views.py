@@ -25,7 +25,7 @@ from libvirt import libvirtError, VIR_DOMAIN_XML_SECURE
 from logs.views import addlogmsg
 from django.conf import settings
 from django.contrib import messages
-from agent.wagent import RBDSnapshot
+from agent.wagent import RBDAgent
 
 
 @login_required
@@ -346,16 +346,12 @@ def instance(request, compute_id, vname):
         addlogmsg(request.user.username, instance.name, msg)
 
     def get_disk_snapshots(disks):
-        if not disks:
-            return []
-        rbd_snap = RBDSnapshot(compute.hostname, compute.login)
         snapshots = {}
         for disk in disks:
             if disk['protocol'] == 'rbd':
-                (ecode, snap_list) = rbd_snap.list(disk['path'])
+                (ecode, snap_list) = rbd_agent.snap_list(disk['path'])
                 if ecode == 0:
                     snapshots[disk['dev']] = snap_list
-        rbd_snap.close()
         return snapshots
 
     def get_disk_path(dev):
@@ -405,7 +401,12 @@ def instance(request, compute_id, vname):
         console_keymap = conn.get_console_keymap()
         console_listen_address = conn.get_console_listen_addr()
         snapshots = sorted(conn.get_snapshot(), reverse=True, key=lambda k:k['date'])
-        disk_snapshots = get_disk_snapshots(rbd_disks)
+        if rbd_disks:
+            rbd_agent = RBDAgent(compute.hostname, compute.login)
+            disk_snapshots = get_disk_snapshots(rbd_disks)
+        else:
+            rbd_agent = None
+            disk_snapshots = []
         inst_xml = conn._XMLDesc(VIR_DOMAIN_XML_SECURE)
         has_managed_save_image = conn.get_managed_save_image()
         console_passwd = conn.get_console_passwd()
@@ -636,8 +637,7 @@ def instance(request, compute_id, vname):
                     msg = _("Disk path for %s not found!" % dev)
                     error_messages.append(msg)
                 else:
-                    rbd_snap = RBDSnapshot(compute.hostname, compute.login)
-                    (ecode, message) = rbd_snap.create(disk_path, snap_name)
+                    (ecode, message) = rbd_agent.snap_create(disk_path, snap_name)
                     if ecode == 0:
                         msg = _("New disk snapshot '%s'" % snap_name)
                         addlogmsg(request.user.username, instance.name, msg)
@@ -653,8 +653,7 @@ def instance(request, compute_id, vname):
                     msg = _("Disk path for %s not found!" % dev)
                     error_messages.append(msg)
                 else:
-                    rbd_snap = RBDSnapshot(compute.hostname, compute.login)
-                    (ecode, message) = rbd_snap.rollback(disk_path, snap_name)
+                    (ecode, message) = rbd_agent.snap_rollback(disk_path, snap_name)
                     if ecode == 0:
                         msg = _("Rollback disk snapshot '%s'" % snap_name)
                         addlogmsg(request.user.username, instance.name, msg)
@@ -670,8 +669,7 @@ def instance(request, compute_id, vname):
                     msg = _("Disk path for %s not found!" % dev)
                     error_messages.append(msg)
                 else:
-                    rbd_snap = RBDSnapshot(compute.hostname, compute.login)
-                    (ecode, message) = rbd_snap.remove(disk_path, snap_name)
+                    (ecode, message) = rbd_agent.snap_remove(disk_path, snap_name)
                     if ecode == 0:
                         msg = _("Removed disk snapshot '%s'" % snap_name)
                         addlogmsg(request.user.username, instance.name, msg)
