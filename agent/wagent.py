@@ -8,8 +8,33 @@ REMOTE_ADDR = "tcp://127.0.0.2:5555"
 TIMEOUT = 10000
 logging.raiseExceptions = False
 
+class WAgentManager:
+    def __init__(self, agent_class):
+        self.agent_class = agent_class
+        self.agents = []
+
+    def search(self, hostname, login):
+        for a in self.agents:
+            if a.hostname == hostname and a.login == login:
+                return a
+        return None
+
+    def __connect(self, hostname, login):
+        new_agent = self.agent_class(hostname, login)
+        self.agents.append(new_agent)
+        return new_agent
+
+    def get(self, hostname, login):
+        agent = self.search(hostname, login)
+        if not agent:
+            agent = self.__connect(hostname, login)
+        return agent
+
+
 class WAgent:
     def __init__(self, hostname, login):
+        self.hostname = hostname
+        self.login = login
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.REQ)
         self.socket.setsockopt(zmq.RCVTIMEO, TIMEOUT)
@@ -30,6 +55,7 @@ class WAgent:
 
     def close(self):
         self.socket.close()
+
 
 class RBDAgent(WAgent):
 
@@ -81,4 +107,7 @@ class RBDAgent(WAgent):
         }
         res = self.make_request_json(req)
         return (res['exitcode'], res['message'])
+
+
+rbd_agent_manager = WAgentManager(RBDAgent)
 

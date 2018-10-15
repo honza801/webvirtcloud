@@ -606,14 +606,14 @@
                                             </div>
                                             <div role="tabpanel" class="tab-pane tab-pane-bordered" id="disksnapshot">
                                                {% ifequal status 5 %}
+                                                    <p>Snapshot name should contain only alphanumeric characters, hyphens or periods.</p>
                                                     {% for disk, snaps in disk_snapshots.items %}
-                                                        <p>{% trans "Choose a snapshot for restore/delete" %}</p>
                                                         <form class="form-horizontal" method="post" role="form">{% csrf_token %}
                                                             <input type="hidden" name="disk_dev" value="{{ disk }}">
                                                             <p style="font-weight: bold;">{{ disk }}</p>
                                                             <div class="form-group">
                                                                 <div class="col-sm-4">
-                                                                    <input type="text" class="form-control input-sm" name="snap_name" placeholder="{% trans "Enter Snapshot Name" %}" maxlength="14">
+                                                                    <input type="text" class="form-control input-sm" name="snap_name" placeholder="{% trans "Enter Snapshot Name" %}" maxlength="14" pattern="[a-zA-Z0-9\.\-_]+">
                                                                 </div>
                                                                 <div class="col-sm-2">
                                                                     <input type="submit" class="btn btn-sm btn-success pull-right" name="snapshot_disk_create" value="{% trans "Take Snapshot" %}">

@@ -25,7 +25,7 @@ from libvirt import libvirtError, VIR_DOMAIN_XML_SECURE
 from logs.views import addlogmsg
 from django.conf import settings
 from django.contrib import messages
-from agent.wagent import RBDAgent
+from agent.wagent import rbd_agent_manager
 
 
 @login_required
@@ -402,7 +402,7 @@ def instance(request, compute_id, vname):
         console_listen_address = conn.get_console_listen_addr()
         snapshots = sorted(conn.get_snapshot(), reverse=True, key=lambda k:k['date'])
         if rbd_disks:
-            rbd_agent = RBDAgent(compute.hostname, compute.login)
+            rbd_agent = rbd_agent_manager.get(compute.hostname, compute.login)
             disk_snapshots = get_disk_snapshots(rbd_disks)
         else:
             rbd_agent = None
@@ -634,7 +634,10 @@ def instance(request, compute_id, vname):
                 snap_name = request.POST.get('snap_name', '')
                 disk_path = get_disk_path(dev)
                 if not disk_path:
-                    msg = _("Disk path for %s not found!" % dev)
+                    msg = _("Disk path for %s not found." % dev)
+                    error_messages.append(msg)
+                elif not snap_name or ' ' in snap_name:
+                    msg = _("Bad snapshot name.")
                     error_messages.append(msg)
                 else:
                     (ecode, message) = rbd_agent.snap_create(disk_path, snap_name)
@@ -652,6 +655,9 @@ def instance(request, compute_id, vname):
                 if not disk_path:
                     msg = _("Disk path for %s not found!" % dev)
                     error_messages.append(msg)
+                elif not snap_name or ' ' in snap_name:
+                    msg = _("Bad snapshot name.")
+                    error_messages.append(msg)
                 else:
                     (ecode, message) = rbd_agent.snap_rollback(disk_path, snap_name)
                     if ecode == 0:
@@ -667,6 +673,9 @@ def instance(request, compute_id, vname):
                 disk_path = get_disk_path(dev)
                 if not disk_path:
                     msg = _("Disk path for %s not found!" % dev)
+                    error_messages.append(msg)
+                elif not snap_name or ' ' in snap_name:
+                    msg = _("Bad snapshot name.")
                     error_messages.append(msg)
                 else:
                     (ecode, message) = rbd_agent.snap_remove(disk_path, snap_name)
