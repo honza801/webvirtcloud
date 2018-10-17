@@ -871,7 +871,7 @@ def instance(request, compute_id, vname):
                         new_instance = Instance(compute_id=compute_id, name=clone_data['name'])
                         new_instance.save()
                         try:
-                            new_uuid = conn.clone_instance(clone_data)
+                            new_uuid = conn.clone_instance(clone_data, rbd_agent)
                             new_instance.uuid = new_uuid
                             new_instance.save()
                         except Exception as e:
