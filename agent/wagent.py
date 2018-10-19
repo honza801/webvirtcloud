@@ -31,6 +31,14 @@ class WAgentManager:
         return agent
 
 
+class WAgentException(Exception):
+    def __init__(self, exitcode, err):
+        self.message = "Error({}): {}".format(exitcode, err)
+        super(WAgentException, self).__init__(self.message)
+        self.exitcode = exitcode
+        self.err = err
+
+
 class WAgent:
     def __init__(self, hostname, login):
         self.hostname = hostname
@@ -45,6 +53,8 @@ class WAgent:
         jreq = json.dumps(req)
         jres = self.make_request(jreq)
         res = json.loads(jres)
+        if res['exitcode'] > 0:
+            raise WAgentException(res['exitcode'], res['message'])
         return res
 
     def make_request(self, req):

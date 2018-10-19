@@ -25,7 +25,7 @@ from libvirt import libvirtError, VIR_DOMAIN_XML_SECURE
 from logs.views import addlogmsg
 from django.conf import settings
 from django.contrib import messages
-from agent.wagent import rbd_agent_manager
+from agent.wagent import WAgentException, rbd_agent_manager
 
 
 @login_required
@@ -401,12 +401,11 @@ def instance(request, compute_id, vname):
         console_keymap = conn.get_console_keymap()
         console_listen_address = conn.get_console_listen_addr()
         snapshots = sorted(conn.get_snapshot(), reverse=True, key=lambda k:k['date'])
+        disk_snapshots = []
         if rbd_disks:
             rbd_agent = rbd_agent_manager.get(compute.hostname, compute.login)
-            disk_snapshots = get_disk_snapshots(rbd_disks)
         else:
             rbd_agent = None
-            disk_snapshots = []
         inst_xml = conn._XMLDesc(VIR_DOMAIN_XML_SECURE)
         has_managed_save_image = conn.get_managed_save_image()
         console_passwd = conn.get_console_passwd()
@@ -872,20 +871,26 @@ def instance(request, compute_id, vname):
                         new_instance.save()
                         try:
                             new_uuid = conn.clone_instance(clone_data, rbd_agent)
+                        except WAgentException as waerr:
+                            new_instance.delete()
+                            error_messages.append(waerr.message)
+                            addlogmsg(request.user.username, vname, waerr.message)
+                        except libvirtError as lib_err:
+                            new_instance.delete()
+                            error_messages.append(lib_err.message)
+                            addlogmsg(request.user.username, vname, lib_err.message)
+                        else:
                             new_instance.uuid = new_uuid
                             new_instance.save()
-                        except Exception as e:
-                            new_instance.delete()
-                            raise e
-                        userinstance = UserInstance(instance_id=new_instance.id, user_id=request.user.id, is_delete=True)
-                        userinstance.save()
+                            userinstance = UserInstance(instance_id=new_instance.id, user_id=request.user.id, is_delete=True)
+                            userinstance.save()
 
-                        msg = _("Clone of '%s'" % instance.name)
-                        addlogmsg(request.user.username, new_instance.name, msg)
-                        if settings.CLONE_INSTANCE_AUTO_MIGRATE:
-                            new_compute = Compute.objects.order_by('?').first()
-                            migrate_instance(new_compute, new_instance, xml_del=True, offline=True)
-                        return HttpResponseRedirect(reverse('instance', args=[new_instance.compute.id, new_instance.name]))
+                            msg = _("Clone of '%s'" % instance.name)
+                            addlogmsg(request.user.username, new_instance.name, msg)
+                            if settings.CLONE_INSTANCE_AUTO_MIGRATE:
+                                new_compute = Compute.objects.order_by('?').first()
+                                migrate_instance(new_compute, new_instance, xml_del=True, offline=True)
+                            return HttpResponseRedirect(reverse('instance', args=[new_instance.compute.id, new_instance.name]))
 
                 if 'change_options' in request.POST and (not instance.is_template or request.user.is_superuser or request.user.is_staff):
                     instance.is_template = request.POST.get('is_template', False)
@@ -903,9 +908,15 @@ def instance(request, compute_id, vname):
 
         conn.close()
 
+    except WAgentException as waerr:
+        error_messages.append(waerr.message)
+        addlogmsg(request.user.username, vname, waerr.message)
     except libvirtError as lib_err:
         error_messages.append(lib_err.message)
         addlogmsg(request.user.username, vname, lib_err.message)
+    
+    if rbd_disks:
+        disk_snapshots = get_disk_snapshots(rbd_disks)
 
     return render(request, 'instance.html', locals())
 
