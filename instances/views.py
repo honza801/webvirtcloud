@@ -838,7 +838,10 @@ def instance(request, compute_id, vname):
                     clone_data = {}
                     clone_data['name'] = request.POST.get('name', '')
 
-                    disk_sum = sum([disk['size']>>30 for disk in disks])
+                    try:
+                        disk_sum = sum([disk['size']>>30 for disk in disks])
+                    except TypeError:
+                        raise Exception("Cannot determine disk size")
                     quota_msg = check_user_quota(1, vcpu, memory, disk_sum)
                     check_instance = Instance.objects.filter(name=clone_data['name'])
                     
@@ -908,16 +911,23 @@ def instance(request, compute_id, vname):
 
         conn.close()
 
+        if rbd_disks:
+            disk_snapshots = get_disk_snapshots(rbd_disks)
+
     except WAgentException as waerr:
         error_messages.append(waerr.message)
         addlogmsg(request.user.username, vname, waerr.message)
     except libvirtError as lib_err:
         error_messages.append(lib_err.message)
         addlogmsg(request.user.username, vname, lib_err.message)
+    except Exception as e:
+        if len(e.args) > 0:
+            msg = ",".join(e.args)
+        else:
+            msg = e
+        error_messages.append(msg)
+        addlogmsg(request.user.username, vname, msg)
     
-    if rbd_disks:
-        disk_snapshots = get_disk_snapshots(rbd_disks)
-
     return render(request, 'instance.html', locals())
 
 
