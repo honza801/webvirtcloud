@@ -25,7 +25,7 @@ from libvirt import libvirtError, VIR_DOMAIN_XML_SECURE
 from logs.views import addlogmsg
 from django.conf import settings
 from django.contrib import messages
-from agent.wagent import WAgentException, rbd_agent_manager
+from agent.wagent import WAgentException, RBDAgent
 
 
 @login_required
@@ -341,17 +341,20 @@ def instance(request, compute_id, vname):
                                instance.name)
         if autostart:
             conn_new.set_autostart(1)
-            conn_new.close()
+        conn_new.refresh_storages()
+        conn_new.close()
         msg = _("Migrate to %s" % new_compute.hostname)
         addlogmsg(request.user.username, instance.name, msg)
 
     def get_disk_snapshots(disks):
+        rbd_agent = RBDAgent(compute.hostname, compute.login)
         snapshots = {}
         for disk in disks:
             if disk['protocol'] == 'rbd':
                 (ecode, snap_list) = rbd_agent.snap_list(disk['path'])
                 if ecode == 0:
                     snapshots[disk['dev']] = snap_list
+        rbd_agent.close()
         return snapshots
 
     def get_disk_path(dev):
@@ -402,10 +405,6 @@ def instance(request, compute_id, vname):
         console_listen_address = conn.get_console_listen_addr()
         snapshots = sorted(conn.get_snapshot(), reverse=True, key=lambda k:k['date'])
         disk_snapshots = []
-        if rbd_disks:
-            rbd_agent = rbd_agent_manager.get(compute.hostname, compute.login)
-        else:
-            rbd_agent = None
         inst_xml = conn._XMLDesc(VIR_DOMAIN_XML_SECURE)
         has_managed_save_image = conn.get_managed_save_image()
         console_passwd = conn.get_console_passwd()
@@ -639,7 +638,9 @@ def instance(request, compute_id, vname):
                     msg = _("Bad snapshot name.")
                     error_messages.append(msg)
                 else:
+                    rbd_agent = RBDAgent(compute.hostname, compute.login)
                     (ecode, message) = rbd_agent.snap_create(disk_path, snap_name)
+                    rbd_agent.close()
                     if ecode == 0:
                         msg = _("New disk snapshot '%s'" % snap_name)
                         addlogmsg(request.user.username, instance.name, msg)
@@ -658,7 +659,9 @@ def instance(request, compute_id, vname):
                     msg = _("Bad snapshot name.")
                     error_messages.append(msg)
                 else:
+                    rbd_agent = RBDAgent(compute.hostname, compute.login)
                     (ecode, message) = rbd_agent.snap_rollback(disk_path, snap_name)
+                    rbd_agent.close()
                     if ecode == 0:
                         msg = _("Rollback disk snapshot '%s'" % snap_name)
                         addlogmsg(request.user.username, instance.name, msg)
@@ -677,7 +680,9 @@ def instance(request, compute_id, vname):
                     msg = _("Bad snapshot name.")
                     error_messages.append(msg)
                 else:
+                    rbd_agent = RBDAgent(compute.hostname, compute.login)
                     (ecode, message) = rbd_agent.snap_remove(disk_path, snap_name)
+                    rbd_agent.close()
                     if ecode == 0:
                         msg = _("Removed disk snapshot '%s'" % snap_name)
                         addlogmsg(request.user.username, instance.name, msg)
@@ -873,6 +878,7 @@ def instance(request, compute_id, vname):
                         new_instance = Instance(compute_id=compute_id, name=clone_data['name'])
                         new_instance.save()
                         try:
+                            rbd_agent = RBDAgent(compute.hostname, compute.login)
                             new_uuid = conn.clone_instance(clone_data, rbd_agent)
                         except WAgentException as waerr:
                             new_instance.delete()
@@ -894,6 +900,9 @@ def instance(request, compute_id, vname):
                                 new_compute = Compute.objects.order_by('?').first()
                                 migrate_instance(new_compute, new_instance, xml_del=True, offline=True)
                             return HttpResponseRedirect(reverse('instance', args=[new_instance.compute.id, new_instance.name]))
+                        finally:
+                            if rbd_agent:
+                                rbd_agent.close()
 
                 if 'change_options' in request.POST and (not instance.is_template or request.user.is_superuser or request.user.is_staff):
                     instance.is_template = request.POST.get('is_template', False)
@@ -920,14 +929,7 @@ def instance(request, compute_id, vname):
     except libvirtError as lib_err:
         error_messages.append(lib_err.message)
         addlogmsg(request.user.username, vname, lib_err.message)
-    except Exception as e:
-        if len(e.args) > 0:
-            msg = ",".join(e.args)
-        else:
-            msg = e
-        error_messages.append(msg)
-        addlogmsg(request.user.username, vname, msg)
-    
+
     return render(request, 'instance.html', locals())
 
 

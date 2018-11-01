@@ -65,6 +65,7 @@ class WAgent:
 
     def close(self):
         self.socket.close()
+        self.tunnel.terminate()
 
 
 class RBDAgent(WAgent):
@@ -119,5 +120,5 @@ class RBDAgent(WAgent):
         return (res['exitcode'], res['message'])
 
 
-rbd_agent_manager = WAgentManager(RBDAgent)
+#rbd_agent_manager = WAgentManager(RBDAgent)
 
