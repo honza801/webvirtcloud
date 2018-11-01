@@ -609,14 +609,21 @@ class wvmInstance(wvmConnect):
         for storage in storages:
             stg = self.get_storage(storage)
             if stg.info()[0] != 0:
-                try:
-                    stg.refresh(0)
-                except:
-                    pass
                 for img in stg.listVolumes():
                     if img.endswith('.iso'):
                         iso.append(img)
         return iso
+
+    def refresh_storages(self):
+        storages = self.get_storages(only_actives=True)
+        for storage in storages:
+            stg = self.get_storage(storage)
+            if stg.info()[0] != 0:
+                # Large number of images makes this really slow
+                try:
+                    stg.refresh(0)
+                except:
+                    pass
 
     def delete_disk(self):
         disks = self.get_disk_device()
