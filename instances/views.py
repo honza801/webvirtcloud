@@ -436,6 +436,7 @@ def instance(request, compute_id, vname):
             addlogmsg(request.user.username, instance.name, msg)
 
         userinstances = UserInstance.objects.filter(instance=instance).order_by('user__username')
+        allow_admin_or_not_template = request.user.is_superuser or request.user.is_staff or not instance.is_template
 
         if request.method == 'POST':
             if 'poweron' in request.POST:
@@ -588,7 +589,7 @@ def instance(request, compute_id, vname):
                 addlogmsg(request.user.username, instance.name, msg)
                 return HttpResponseRedirect(request.get_full_path() + '#resize')
 
-            if 'umount_iso' in request.POST and (request.user.is_superuser or request.user.is_staff or not instance.is_template):
+            if 'umount_iso' in request.POST and allow_admin_or_not_template:
                 image = request.POST.get('path', '')
                 dev = request.POST.get('umount_iso', '')
                 conn.umount_iso(dev, image)
@@ -596,7 +597,7 @@ def instance(request, compute_id, vname):
                 addlogmsg(request.user.username, instance.name, msg)
                 return HttpResponseRedirect(request.get_full_path() + '#media')
 
-            if 'mount_iso' in request.POST and (request.user.is_superuser or request.user.is_staff or not instance.is_template):
+            if 'mount_iso' in request.POST and allow_admin_or_not_template:
                 image = request.POST.get('media', '')
                 dev = request.POST.get('mount_iso', '')
                 conn.mount_iso(dev, image)
@@ -604,21 +605,21 @@ def instance(request, compute_id, vname):
                 addlogmsg(request.user.username, instance.name, msg)
                 return HttpResponseRedirect(request.get_full_path() + '#media')
 
-            if 'snapshot' in request.POST and (request.user.is_superuser or request.user.is_staff or not instance.is_template):
+            if 'snapshot' in request.POST and allow_admin_or_not_template:
                 name = request.POST.get('name', '')
                 conn.create_snapshot(name)
                 msg = _("New snapshot")
                 addlogmsg(request.user.username, instance.name, msg)
                 return HttpResponseRedirect(request.get_full_path() + '#managesnapshot')
 
-            if 'delete_snapshot' in request.POST and (request.user.is_superuser or request.user.is_staff or not instance.is_template):
+            if 'delete_snapshot' in request.POST and allow_admin_or_not_template:
                 snap_name = request.POST.get('name', '')
                 conn.snapshot_delete(snap_name)
                 msg = _("Delete snapshot")
                 addlogmsg(request.user.username, instance.name, msg)
                 return HttpResponseRedirect(request.get_full_path() + '#managesnapshot')
 
-            if 'revert_snapshot' in request.POST and (request.user.is_superuser or request.user.is_staff or not instance.is_template):
+            if 'revert_snapshot' in request.POST and allow_admin_or_not_template:
                 snap_name = request.POST.get('name', '')
                 conn.snapshot_revert(snap_name)
                 msg = _("Successful revert snapshot: ")
@@ -627,7 +628,7 @@ def instance(request, compute_id, vname):
                 msg = _("Revert snapshot")
                 addlogmsg(request.user.username, instance.name, msg)
 
-            if 'snapshot_disk_create' in request.POST and (request.user.is_superuser or request.user.is_staff or not instance.is_template):
+            if 'snapshot_disk_create' in request.POST and allow_admin_or_not_template:
                 dev = request.POST.get('disk_dev', '')
                 snap_name = request.POST.get('snap_name', '')
                 disk_path = get_disk_path(dev)
@@ -648,7 +649,7 @@ def instance(request, compute_id, vname):
                     else:
                         error_message.append(message)
             
-            if 'snapshot_disk_rollback' in request.POST and (request.user.is_superuser or request.user.is_staff or not instance.is_template):
+            if 'snapshot_disk_rollback' in request.POST and allow_admin_or_not_template:
                 dev = request.POST.get('disk_dev', '')
                 snap_name = request.POST.get('snap_name', '')
                 disk_path = get_disk_path(dev)
@@ -669,7 +670,7 @@ def instance(request, compute_id, vname):
                     else:
                         error_message.append(message)
             
-            if 'snapshot_disk_remove' in request.POST and (request.user.is_superuser or request.user.is_staff or not instance.is_template):
+            if 'snapshot_disk_remove' in request.POST and allow_admin_or_not_template:
                 dev = request.POST.get('disk_dev', '')
                 snap_name = request.POST.get('snap_name', '')
                 disk_path = get_disk_path(dev)
