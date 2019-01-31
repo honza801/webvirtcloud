@@ -199,7 +199,7 @@
                                                     <div role="tabpanel" class="tab-pane tab-pane-bordered active" id="resume">
                                                         <p>{% trans "Administrator blocked your instance." %}</p>
                                                          <form action="" method="post" role="form">{% csrf_token %}
-                                                            <button class="btn btn-lg btn-success disabled pull-right">{% trans "Resume" %}</button>
+                                                            <button class="btn btn-lg btn-success pull-right" disabled>{% trans "Resume" %}</button>
                                                             <div class="clearfix"></div>
                                                         </form>
                                                     </div>
@@ -272,7 +272,7 @@
                                                     </div>
 
                                                 {% else %}
-                                                    <button class="btn btn-lg btn-success pull-right disabled">{% trans "Console" %}</button>
+                                                    <button class="btn btn-lg btn-success pull-right" disabled>{% trans "Console" %}</button>
                                                 {% endifequal %}
                                                 <div class="clearfix"></div>
                                             </div>
@@ -288,7 +288,7 @@
                                                     {% ifequal status 5 %}
                                                         <input type="submit" class="btn btn-lg btn-success pull-right" name="rootpasswd" value="{% trans "Reset Root Password" %}">
                                                     {% else %}
-                                                        <button class="btn btn-lg btn-success pull-right disabled">{% trans "Reset Root Password" %}</button>
+                                                        <button class="btn btn-lg btn-success pull-right" disabled>{% trans "Reset Root Password" %}</button>
                                                     {% endifequal %}
                                                 </form>
                                                 <div class="clearfix"></div>
@@ -314,7 +314,7 @@
                                                     {% ifequal status 5 %}
                                                         <input type="submit" class="btn btn-lg btn-success pull-right" name="addpublickey" value="{% trans "Add Public Key" %}">
                                                     {% else %}
-                                                        <button class="btn btn-lg btn-success pull-right disabled">{% trans "Add Public Key" %}</button>
+                                                        <button class="btn btn-lg btn-success pull-right" disabled>{% trans "Add Public Key" %}</button>
                                                     {% endifequal %}
                                                 </form>
                                                 <div class="clearfix"></div>
@@ -421,12 +421,12 @@
                                                         {% ifequal status 5 %}
                                                             <button type="submit" class="btn btn-lg btn-success pull-right" name="resize">{% trans "Resize" %}</button>
                                                         {% else %}
-                                                            <button class="btn btn-lg btn-success pull-right disabled">{% trans "Resize" %}</button>
+                                                            <button class="btn btn-lg btn-success pull-right" disabled>{% trans "Resize" %}</button>
                                                         {% endifequal %}
                                                     </form>
                                                 {% else %}
                                                     {% trans "You don't have permission for resizing instance" %}
-                                                    <button class="btn btn-lg btn-success pull-right disabled">{% trans "Resize" %}</button>
+                                                    <button class="btn btn-lg btn-success pull-right" disabled>{% trans "Resize" %}</button>
                                                 {% endif %}
                                                 <div class="clearfix"></div>
                                             </div>
@@ -496,12 +496,12 @@
                                                         {% ifequal status 5 %}
                                                             <button type="submit" class="btn btn-lg btn-success pull-right" name="addvolume">{% trans "Add volume" %}</button>
                                                         {% else %}
-                                                            <button class="btn btn-lg btn-success pull-right disabled">{% trans "Add volume" %}</button>
+                                                            <button class="btn btn-lg btn-success pull-right" disabled>{% trans "Add volume" %}</button>
                                                         {% endifequal %}
                                                     </form>
                                                 {% else %}
                                                     {% trans "You don't have permission for resizing instance" %}
-                                                    <button class="btn btn-lg btn-success pull-right disabled">{% trans "Add volume" %}</button>
+                                                    <button class="btn btn-lg btn-success pull-right" disabled>{% trans "Add volume" %}</button>
                                                 {% endif %}
                                                 <div class="clearfix"></div>
                                             </div>
@@ -537,7 +537,7 @@
                                                         {% ifequal status 5 %}
                                                             <input type="submit" class="btn btn-lg btn-success pull-right" name="snapshot" value="{% trans "Take Snapshot" %}">
                                                         {% else %}
-                                                            <button class="btn btn-lg btn-success pull-right disabled">{% trans "Take Snapshot" %}</button>
+                                                            <button class="btn btn-lg btn-success pull-right" disabled>{% trans "Take Snapshot" %}</button>
                                                         {% endifequal %}
                                                     </form>
                                                     <div class="clearfix"></div>
@@ -571,7 +571,7 @@
                                                                                         <span class="glyphicon glyphicon-save"></span>
                                                                                     </button>
                                                                                 {% else %}
-                                                                                    <button type="button" class="btn btn-sm btn-default disabled">
+                                                                                    <button type="button" class="btn btn-sm btn-default" disabled>
                                                                                         <span class="glyphicon glyphicon-save"></span>
                                                                                     </button>
                                                                                 {% endifequal %}
@@ -687,7 +687,7 @@
                                                                     {% if media_iso and allow_admin_or_not_template %}
                                                                         <button type="submit" class="btn btn-sm btn-success pull-left" name="mount_iso" value="{{ cd.dev }}" style="margin-top: 2px;">{% trans "Mount" %}</button>
                                                                     {% else %}
-                                                                        <button class="btn btn-sm btn-success pull-left disabled" name="mount_iso" style="margin-top: 2px;">{% trans "Mount" %}</button>
+                                                                        <button class="btn btn-sm btn-success pull-left" name="mount_iso" style="margin-top: 2px;" disabled>{% trans "Mount" %}</button>
                                                                     {% endif %}
                                                                 </div>
                                                             {% else %}
@@ -699,7 +699,7 @@
                                                                     {% if allow_admin_or_not_template %}
                                                                         <button type="submit" class="btn btn-sm btn-success pull-left" value="{{ cd.dev }}" name="umount_iso" style="margin-top: 2px;">{% trans "Umount" %}</button>
                                                                     {% else %}
-                                                                        <button class="btn btn-sm btn-success pull-left disabled" value="{{ cd.dev }}" name="umount_iso" style="margin-top: 2px;">{% trans "Umount" %}</button>
+                                                                        <button class="btn btn-sm btn-success pull-left" value="{{ cd.dev }}" name="umount_iso" style="margin-top: 2px;" disabled>{% trans "Umount" %}</button>
                                                                     {% endif %}
                                                                 </div>
                                                             {% endif %}
@@ -739,7 +739,7 @@
                                                                 {% ifequal status 5 %}
                                                                     <button type="submit" class="btn btn-success " name="set_console_type">{% trans "Set" %}</button>
                                                                 {% else %}
-                                                                    <button class="btn btn-success disabled" name="set_console_type">{% trans "Set" %}</button>
+                                                                    <button class="btn btn-success" name="set_console_type" disabled>{% trans "Set" %}</button>
                                                                 {% endifequal %}
                                                             </div>
                                                         </div>
@@ -760,7 +760,7 @@
                                                                 {% ifequal status 5 %}
                                                                     <button type="submit" class="btn btn-success " name="set_console_listen_address">{% trans "Set" %}</button>
                                                                 {% else %}
-                                                                    <button class="btn btn-success disabled" name="set_console_listen_address">{% trans "Set" %}</button>
+                                                                    <button class="btn btn-success" name="set_console_listen_address" disabled>{% trans "Set" %}</button>
                                                                 {% endifequal %}
                                                             </div>
                                                         </div>
@@ -798,7 +798,7 @@
                                                                 {% ifequal status 5 %}
                                                                     <button type="submit" class="btn btn-success" name="set_console_passwd">{% trans "Set" %}</button>
                                                                 {% else %}
-                                                                    <button class="btn btn-success disabled" name="set_console_passwd">{% trans "Set" %}</button>
+                                                                    <button class="btn btn-success" name="set_console_passwd" disabled>{% trans "Set" %}</button>
                                                                 {% endifequal %}
                                                             </div>
                                                         </div>
@@ -828,7 +828,7 @@
                                                                 {% ifequal status 5 %}
                                                                     <button type="submit" class="btn btn-success" name="set_console_keymap">{% trans "Set" %}</button>
                                                                 {% else %}
-                                                                    <button class="btn btn-success disabled" name="set_console_keymap">{% trans "Set" %}</button>
+                                                                    <button class="btn btn-success" name="set_console_keymap" disabled>{% trans "Set" %}</button>
                                                                 {% endifequal %}
                                                             </div>
                                                         </div>
@@ -959,7 +959,7 @@
                                                         {% ifequal status 5 %}
                                                             <button type="submit" class="btn btn-lg btn-success pull-right" name="clone" onclick="showPleaseWaitDialog();">{% trans "Clone" %}</button>
                                                         {% else %}
-                                                            <button class="btn btn-lg btn-success pull-right disabled" name="clone">{% trans "Clone" %}</button>
+                                                            <button class="btn btn-lg btn-success pull-right" name="clone" disabled>{% trans "Clone" %}</button>
                                                         {% endifequal %}
                                                     </form>
                                                     <div class="clearfix"></div>
@@ -1016,7 +1016,7 @@
                                                         {% if computes_count != 1 %}
                                                             <button type="submit" class="btn btn-lg btn-success pull-right" name="migrate" onclick="showPleaseWaitDialog();">{% trans "Migrate" %}</button>
                                                         {% else %}
-                                                            <button class="btn btn-lg btn-success pull-right disabled">{% trans "Migrate" %}</button>
+                                                            <button class="btn btn-lg btn-success pull-right" disabled>{% trans "Migrate" %}</button>
                                                         {% endif %}
                                                     </form>
                                                     <div class="clearfix"></div></p>
@@ -1033,7 +1033,7 @@
                                                                 {% trans "Change" %}
                                                             </button>
                                                         {% else %}
-                                                            <button class="btn btn-lg btn-success pull-right disabled">
+                                                            <button class="btn btn-lg btn-success pull-right" disabled>
                                                                 {% trans "Change" %}
                                                             </button>
                                                         {% endifequal %}
@@ -1065,7 +1065,7 @@
                                                         {% ifequal status 5 %}
                                                             <button type="submit" class="btn btn-lg btn-success pull-right" name="change_options">{% trans "Change" %}</button>
                                                         {% else %}
-                                                            <button class="btn btn-lg btn-success pull-right disabled" name="change_options">{% trans "Change" %}</button>
+                                                            <button class="btn btn-lg btn-success pull-right" name="change_options" disabled>{% trans "Change" %}</button>
                                                         {% endifequal %}
                                                     </form>
                                                     <div class="clearfix"></div>
@@ -1200,7 +1200,7 @@
                                                 <p>{% trans "Delete storage for instance?" %}</p>
                                                 {% if request.user.is_superuser or userinstance.is_delete %}
                                                     {% ifequal status 3 %}
-                                                        <button class="btn btn-lg btn-success disabled pull-right" name="delete">{% trans "Destroy" %}</button>
+                                                        <button class="btn btn-lg btn-successpull-right" name="delete" disabled>{% trans "Destroy" %}</button>
                                                     {% else %}
                                                         <form class="form-group" method="post" role="form">{% csrf_token %}
                                                             <div class="checkbox" style="margin-left: 8px;">
@@ -1213,7 +1213,7 @@
                                                         </form>
                                                     {% endifequal %}
                                                 {% else %}
-                                                    <button class="btn btn-lg btn-success disabled pull-right" name="delete">{% trans "Destroy" %}</button>
+                                                    <button class="btn btn-lg btn-success pull-right" name="delete" disabled>{% trans "Destroy" %}</button>
                                                 {% endif %}
                                                 <div class="clearfix"></div>
                                             </div>
