@@ -562,7 +562,7 @@ def instance(request, compute_id, vname):
                 
                 path = connCreate.create_volume(storage, name, size, format, meta_prealloc)
                 conn.attach_disk(path, target, subdriver=format, cache=cache, targetbus=bus)
-                msg = _('Attach new disk')
+                msg = _('Attach new disk {} ({})'.format(name, format))
                 addlogmsg(request.user.username, instance.name, msg)
                 return HttpResponseRedirect(request.get_full_path() + '#resize')
 
