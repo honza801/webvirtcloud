@@ -585,7 +585,7 @@ def instance(request, compute_id, vname):
                 
                 path = connCreate.create_volume(storage, name, size, format, meta_prealloc)
                 conn.attach_disk(path, target, subdriver=format, cache=cache, targetbus=bus)
-                msg = _('Attach new disk')
+                msg = _('Attach new disk {} ({})'.format(name, format))
                 addlogmsg(request.user.username, instance.name, msg)
                 return HttpResponseRedirect(request.get_full_path() + '#resize')
 
@@ -724,7 +724,7 @@ def instance(request, compute_id, vname):
                         addlogmsg(request.user.username, instance.name, msg)
                         return HttpResponseRedirect(request.get_full_path() + '#xmledit')
 
-            if request.user.is_superuser or userinstance.is_vnc:
+            if request.user.is_superuser or request.user.is_staff or userinstance.is_vnc:
                 if 'set_console_passwd' in request.POST:
                     if request.POST.get('auto_pass', ''):
                         passwd = randomPasswd()
